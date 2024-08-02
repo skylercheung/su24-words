@@ -8,7 +8,7 @@ import words.core.SecretState;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Group4Player extends Player {
+public class Group4PlayerSkyler extends Player {
 
     /**
      * Method is called when it is this player's turn to submit a bid. They should guarantee that
