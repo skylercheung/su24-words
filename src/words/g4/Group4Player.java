@@ -30,7 +30,9 @@ public class Group4Player extends Player {
                    int totalRounds, ArrayList<String> playerList,
                    SecretState secretstate, int playerID) {
 
-        // TODO: implement
+        // TODO: implement own bid
+        int myBid = (int)(Math.random() * secretstate.getScore()) / 8;
+        return myBid;
     }
 
 
