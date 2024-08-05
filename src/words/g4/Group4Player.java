@@ -31,6 +31,7 @@ public class Group4Player extends Player {
                    SecretState secretstate, int playerID) {
 
         // TODO: implement
+        return 1;
     }
 
 
