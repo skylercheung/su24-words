@@ -1,29 +1,29 @@
 package words.core;
 
 public final class ScrabbleValues {
-	
+
     public static int getWordScore(String word)
     {
-    	/* assume word is in dictionary */
-//    	if(word.length() > 7) {
-//    		return 0;
-//    	}
+        /* assume word is in dictionary */
+        //if(word.length() > 7) {
+        //	return 0;
+        //}
         // Lets compute the score.
         int score = 0;
         if(word.length() >= 7) {
-        	score += 50;
+            score += 50;
         }
-        
+
         for(int loop=0;loop<word.length();loop++)
         {
-        	Character currChar = word.charAt(loop);
-        	score += letterScore(currChar);
+            Character currChar = word.charAt(loop);
+            score += letterScore(currChar);
         }
-        
+
         return score;
     }
 
-	public static int letterScore(Character letter)
+    public static int letterScore(Character letter)
     {
         int score = 0;
         switch(letter)
@@ -60,15 +60,15 @@ public final class ScrabbleValues {
             case '*': score = 0;break;
 
             default:
-            	score = 0;
-            	break;
+                score = 0;
+                break;
         }
 
         return score;
     }
-	
-	public static int getLetterFrequency(Character letter)
-	{
+
+    public static int getLetterFrequency(Character letter)
+    {
         int freq = 0;
         switch(letter)
         {
@@ -102,14 +102,14 @@ public final class ScrabbleValues {
             case 'Q': freq = 1;break;
             case 'Z': freq = 1;break;
             case '*': freq = 0;break;
-            
+
             default:
-            	freq = 0;
-            	break;
+                freq = 0;
+                break;
 
         }
 
         return freq;
     }
-	
+
 }
