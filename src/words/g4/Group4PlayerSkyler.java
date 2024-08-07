@@ -13,6 +13,7 @@ import java.util.logging.Level;
 public class Group4PlayerSkyler extends Player {
 
     private double bidFraction = 0.1; // fraction of calculated EV to form bid
+    private int bidThreshold = 91; // max score in scrabblewordlist.txt; METHOXYBENZENES or OXYPHENBUTAZONE
 
     /**
      * This method is called at the start of a new game.
@@ -27,23 +28,23 @@ public class Group4PlayerSkyler extends Player {
         createScrabbleWordList();
         initializeScrabbleWordlist(); // read the file containing all the words and create new file of Scrabble valid words
 
-//        System.out.println("----------------sahfahdls");
-//
 //        int maxScore = Integer.MIN_VALUE;
-//        try (BufferedReader br = new BufferedReader((new FileReader("files/scrabblewordlist.txt")))) {
+//        String maxWord = "";
+//        try (BufferedReader br = new BufferedReader((new FileReader("files/wordlist.txt")))) {
 //            String line;
 //
 //            while ((line = br.readLine()) != null) {
 //                int score = ScrabbleValues.getWordScore(line);
-//                if (score > maxScore) {
+//                if (score >= maxScore) {
 //                    maxScore = score;
+//                    maxWord = line;
 //                }
 //            }
 //        } catch (Exception e) {
 //            logger.log(Level.SEVERE, "An error occurred.", e);
 //        }
 //
-//        System.out.println("yo" + maxScore);
+//        System.err.println("yo" + maxScore + maxWord);
 
         this.numPlayers = numPlayers; // so we know how many players are in the game
     }
