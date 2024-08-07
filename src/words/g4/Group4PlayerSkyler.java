@@ -14,6 +14,7 @@ public class Group4PlayerSkyler extends Player {
 
     private double bidFraction = 0.1; // fraction of calculated EV to form bid
     private int bidThreshold = 91; // max score in scrabblewordlist.txt; METHOXYBENZENES or OXYPHENBUTAZONE
+    private int bidTotal = 0;
 
     /**
      * This method is called at the start of a new game.
@@ -133,18 +134,12 @@ public class Group4PlayerSkyler extends Player {
             expectedValue /= totalProb;
         }
 
-//        int total = 0;
-//        for (int bid : playerBidList.get(playerID).getBidValues()) {
-//            total += bid;
-//        }
-
         myBid = (int) (expectedValue * bidFraction) + ScrabbleValues.letterScore(bidLetter.getCharacter()) / 2;
+        myBid = Math.min(myBid, bidThreshold - bidTotal);
 
-//        if (total > 75) {
-//            myBid = 0;
-//        } else {
-//
-//        }
+        bidTotal += myBid;
+
+        System.err.println(bidTotal);
 
         return myBid;
     }
