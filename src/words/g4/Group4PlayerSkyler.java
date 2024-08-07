@@ -2,10 +2,7 @@ package words.g4;
 
 import words.core.*;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.*;
 import java.nio.Buffer;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,7 +12,7 @@ import java.util.logging.Level;
 
 public class Group4PlayerSkyler extends Player {
 
-    private double bidFraction = 0.5; // fraction of calculated EV to form bid
+    private double bidFraction = 0.1; // fraction of calculated EV to form bid
 
     /**
      * This method is called at the start of a new game.
@@ -29,6 +26,24 @@ public class Group4PlayerSkyler extends Player {
 
         createScrabbleWordList();
         initializeScrabbleWordlist(); // read the file containing all the words and create new file of Scrabble valid words
+
+//        System.out.println("----------------sahfahdls");
+//
+//        int maxScore = Integer.MIN_VALUE;
+//        try (BufferedReader br = new BufferedReader((new FileReader("files/scrabblewordlist.txt")))) {
+//            String line;
+//
+//            while ((line = br.readLine()) != null) {
+//                int score = ScrabbleValues.getWordScore(line);
+//                if (score > maxScore) {
+//                    maxScore = score;
+//                }
+//            }
+//        } catch (Exception e) {
+//            logger.log(Level.SEVERE, "An error occurred.", e);
+//        }
+//
+//        System.out.println("yo" + maxScore);
 
         this.numPlayers = numPlayers; // so we know how many players are in the game
     }
@@ -98,7 +113,6 @@ public class Group4PlayerSkyler extends Player {
                    int totalRounds, ArrayList<String> playerList,
                    SecretState secretstate, int playerID) {
 
-        // TODO: implement own bid
         int myBid = (int)(Math.random() * secretstate.getScore()) / 8;
 
         double totalProb = 0.0;
@@ -114,16 +128,35 @@ public class Group4PlayerSkyler extends Player {
             }
         }
 
-//        if (totalProb > 0) {
-//            expectedValue /= totalProb;
+        if (totalProb > 0) {
+            expectedValue /= totalProb;
+        }
+
+//        int total = 0;
+//        for (int bid : playerBidList.get(playerID).getBidValues()) {
+//            total += bid;
 //        }
 
-        myBid = (int) (expectedValue * bidFraction);
+        myBid = (int) (expectedValue * bidFraction) + ScrabbleValues.letterScore(bidLetter.getCharacter()) / 2;
+
+//        if (total > 75) {
+//            myBid = 0;
+//        } else {
+//
+//        }
 
         return myBid;
     }
 
     private double calculateWordProb(Word word) {
-        return 1.0 / word.word.length();
+        double probability = 1.0;
+
+        for (char c : word.word.toCharArray()) {
+            probability *= ScrabbleValues.getLetterFrequency(c);
+        }
+
+        probability /= word.word.length();
+
+        return probability;
     }
 }
