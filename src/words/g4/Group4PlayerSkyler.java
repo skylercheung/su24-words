@@ -4,10 +4,7 @@ import words.core.*;
 
 import java.io.*;
 import java.nio.Buffer;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Level;
 
 public class Group4PlayerSkyler extends Player {
@@ -93,6 +90,28 @@ public class Group4PlayerSkyler extends Player {
         } catch (Exception e) {
             logger.log(Level.SEVERE, "An error occurred.", e);
         }
+    }
+
+    /**
+     * This method is called at the start of a new round in the game.
+     * The player can some initialization if it so chooses.
+     * @param secretstate This player's secret state, including its secret letters
+     */
+    @Override
+    public void startNewRound(SecretState secretstate){
+        myLetters.clear(); // clear the letters that I have
+        // this puts the secret letters into the currentLetters List
+        myLetters.addAll(secretstate.getSecretLetters().stream().map(Letter::getCharacter).toList());
+
+        playerLetters.clear(); // clear the letters that all the players have
+        for (int i = 0; i < numPlayers; i++) {
+            playerLetters.add(new LinkedList<Character>()); // initialize each player's list of letters
+        }
+        /*
+        Note that although the letters that I have will be in the playerLetters List, the playerLetters
+        List doesn't include my secret letters.
+         */
+        bidTotal = 0;
     }
 
     /**
