@@ -82,8 +82,11 @@ public class Group4PlayerAaron extends Player {
         double bonusWeight = 0.0;
 
         if (!topCharacterMap.isEmpty()) {
-            if (topCharacterMap.containsKey(bidLetter.getCharacter())) bonusWeight += 0.05;
+            if (topCharacterMap.containsKey(bidLetter.getCharacter()) && myList.size() < 7) bonusWeight += 0.10;
+            if (topCharacterMap.containsKey(bidLetter.getCharacter()) && myList.size() >= 7) bonusWeight += 0.05;
         }
+
+        if (myLetters.size() > 10 || topCharacterMap.containsValue(0)) return placeBid(0, bidLetter, secretstate, 0.1);
 
         // add importance to vowels when there are less than 3
         if (numVal < 3 && VOWELS.contains(bidLetter.getCharacter()))
@@ -111,10 +114,11 @@ public class Group4PlayerAaron extends Player {
      * @param bidLetter: letter on bid right now
      *
      * */
-    private int placeBid(double percent, Letter bidLetter, SecretState secretstate) {
+    private int placeBid(double percent, Letter bidLetter, SecretState secretstate, double... cap) {
         double random = Math.random();
 
-        while (random < percent) {
+        double max = cap.length > 0 ? cap[0] :  1;
+        while (random < percent || random > max) {
             random = Math.random();
         }
 
