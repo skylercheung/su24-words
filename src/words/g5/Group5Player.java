@@ -3,92 +3,109 @@ package words.g5;
 import words.core.Letter;
 import words.core.PlayerBids;
 import words.core.SecretState;
-import words.core.Word;
+import words.core.ScrabbleValues;
 
-import java.util.HashMap;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 public class Group5Player extends words.core.Player {
-
-    private HashMap<Character, Double> freqInWords = new HashMap<>();
-    private HashMap<Character, Double> freqInLetters = new HashMap<>();
-
-    private HashMap<Character, Double> playerLetterFreq = new HashMap<>();
+    private int maxVowelBid = 16;
+    private int minVowelBid = 2;
+    private int vowelBid = 10;
 
     private boolean isVowel(char c) {
         return "AEIOUaeiou".indexOf(c) >= 0;
     }
 
-    private double countOccurrences(char c) {
-        double count = 0.0;
-        Word[] wordList = super.wordlist;
-
-        for (Word w : wordList) {
-            String wString = w.word;
-            for (int i=0; i<wString.length(); ++i) {
-                if (c == '?') {
-                    ++ count;
-                }
-                else if (c == wString.charAt(i)) {
-                    ++count;
-                }
+    private int countCharacterList(List<Character> letters, Character letter) {
+        int count = 0;
+        for (int i=0; i<letters.size(); ++i) {
+            if (letters.get(i) == letter) {
+                ++count;
             }
         }
-
         return count;
     }
 
-    private void initFreqMaps() {
-        char[] chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".toCharArray();
-        double[] freq = {9, 2, 2, 4, 12, 2, 3, 2, 9, 1, 1, 4, 2, 6, 8, 2, 1, 6, 4, 6, 4, 2, 2, 1, 2, 1};
-
-        double totalNumChars = countOccurrences('?');
-        for (int i=0; i<26; ++i) {
-            freqInLetters.put(chars[i], freq[i] / 98.0);
-            double charFreq = countOccurrences(chars[i]);
-            freqInWords.put(chars[i], charFreq / totalNumChars);
+    private int countLetterArrayList(ArrayList<Letter> letters, Letter letter) {
+        int count = 0;
+        for (int i=0; i<letters.size(); ++i) {
+            if (letters.get(i).getCharacter() == letter.getCharacter()) {
+                ++count;
+            }
         }
+        return count;
+    }
+
+    private int countLetterArr(char[] chars, char letter) {
+        int count = 0;
+
+        for (int i = 0; i < chars.length; ++i) {
+            if (chars[i] == letter) {
+                ++count;
+            }
+        }
+        return count;
+    }
+
+    private double[] countVowelsAndConsonants() {
+        double numVowels = 0.0;
+        double numConsonants = 0.0;
+        for (Character c : myLetters) {
+            if (isVowel(c)) {
+                ++numVowels;
+            } else {
+                ++numConsonants;
+            }
+        }
+
+        return new double[]{numVowels, numConsonants};
     }
 
     @Override
     public int bid(Letter bidLetter, List<PlayerBids> playerBidList, int totalRounds, ArrayList<String> playerList, SecretState secretstate, int playerID) {
-        initFreqMaps();
-        Word[] wordList = super.wordlist;
-        int id = super.myID;
-        int numPlayers = super.numPlayers;
-        List<Character> myLetters = super.myLetters;
-        List<List<Character>> playerLetters = super.playerLetters;
-        List<Integer> scores = super.scores;
+        String currentBest = returnWord();
+
+        //if we can already make a 7+ letter word, bid 1
+        if (currentBest.length() >= 7) {
+            return Math.min(1, secretstate.getScore());
+        }
+
+        //if we have vowels and consonants in a suboptimal ratio, bid more for vowels
+        double[] num = countVowelsAndConsonants();
+        if ((num[0] / num[1]) < 0.33) {
+            vowelBid = Math.min(vowelBid + 1, maxVowelBid);
+        } else if (vowelBid > minVowelBid) {
+            vowelBid = Math.max(vowelBid - 1, minVowelBid);
+        }
+
+        ArrayList<Letter> secretLetters = secretstate.getSecretLetters();
 
         Character bidChar = bidLetter.getCharacter();
-        int numChar = Collections.frequency(myLetters, bidChar);
+        int numChar = countCharacterList(myLetters, bidChar) + countLetterArrayList(secretLetters, bidLetter);
 
         myLetters.add(bidChar);
-        String bestWord = returnWord();
+        String possibleBest = returnWord();
+        myLetters.remove(bidChar);
 
-        int numCharInBest = Collections.frequency(Arrays.asList(bestWord.toCharArray()), bidChar);
+        int numCharInBest = countLetterArr(possibleBest.toCharArray(), bidChar);
         int bid;
 
-        if (bestWord.contains(bidChar.toString()) && numChar == numCharInBest - 1) {
-            if (bestWord.length() == 7) {
+        //if we need this character to make the best word given our current letters
+        if (possibleBest.contains(bidChar.toString()) && numChar < numCharInBest) {
+            if (possibleBest.length() >= 7) {
                 bid = 25;
-            }
-            else {
-                //bid = ScrabbleValues.getWordScore(bestWord) / 2 + 1
-                bid = bidLetter.getValue() + 1;
+            } else {
+                bid = ScrabbleValues.getWordScore(possibleBest) / 2 + 1;
             }
         }
-        else if (isVowel(bidChar)) {
-            bid = 4;
+        else if (isVowel(bidChar) && !myLetters.contains(bidChar) && !secretLetters.contains(bidLetter)) {
+            bid = vowelBid;
         }
         else {
-            bid = 2;
+            bid = 8;
         }
 
-        myLetters.remove(bidChar);
         return Math.min(bid, secretstate.getScore());
     }
 }

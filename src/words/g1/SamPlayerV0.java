@@ -4,12 +4,24 @@ import java.util.*;
 
 public class SamPlayerV0 extends Player {
     private Map<Character, Integer> letterFrequency;
+    private Map<Character, Integer> lettersTaken;
     private Set<String> commonDoublets;
     private Set<String> commonTriplets;
     private Set<Character> vowels;
     private int currentRound;
     private int totalRounds;
     private Random random = new Random();
+
+    double[] usagefrequencies = {
+            8.17, 1.49, 2.78, 4.25, 12.70, 2.23, 2.02, 6.09, 6.97, 0.15,
+            0.77, 4.03, 2.41, 6.75, 7.51, 1.93, 0.10, 5.99, 6.33, 9.06,
+            2.76, 0.98, 2.36, 0.15, 1.97, 0.07
+    };
+    double [] modifier = {
+            1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0, 1.0,
+            1.0, 1.0, 1.0, 1.0, 1.0, 1.0
+    };
 
     @Override
     public void startNewGame(int playerID, int numPlayers) {
@@ -18,6 +30,10 @@ public class SamPlayerV0 extends Player {
         initializeCommonCombinations();
         initializeVowels();
         currentRound = 0;
+        lettersTaken = new HashMap<>();
+        for (char c = 'A'; c <= 'Z'; c++) {
+            lettersTaken.put(c, 0);
+        }
     }
 
     @Override
@@ -31,23 +47,40 @@ public class SamPlayerV0 extends Player {
                    int totalRounds, ArrayList<String> playerList,
                    SecretState secretstate, int playerID) {
         this.totalRounds = totalRounds;
+
+        // Check if we already have a high val letter
+        if (hasHighValueLetter() && ScrabbleValues.letterScore(bidLetter.getCharacter()) > 5) {
+            return 1; // Bid 1 if  already have a highval letter
+        }
+
         int letterValue = calculateLetterValue(bidLetter);
         int budget = calculateBidBudget(secretstate.getScore(), totalRounds - currentRound);
 
         // Calculate combination bonus
         int combinationBonus = calculateCombinationBonus(bidLetter);
 
-        // Check consonant-to-vowel ratio
+        // Use balanced frequency
+        double balancedFreq = getBalancedFrequency(bidLetter.getCharacter());
+        int frequencyBonus = (int) (balancedFreq * 20); // Adjust multiplier as needed
+
+        // Add vowel bonus
         int vowelBonus = calculateVowelBonus(bidLetter);
 
-
-        int baseBid = Math.min((letterValue + combinationBonus + vowelBonus) / 2, budget);
-
+        int baseBid = Math.min((letterValue + combinationBonus + frequencyBonus + vowelBonus) / 2, budget);
 
         int randomFactor = random.nextInt(3) - 1; // Random number between -1 and 1
-        int finalBid = Math.max(0, Math.min(baseBid + randomFactor, secretstate.getScore()));
+        int finalBid = Math.max(1, Math.min(baseBid + randomFactor, secretstate.getScore()));
 
         return finalBid;
+    }
+
+    private boolean hasHighValueLetter() {
+        for (Character c : myLetters) {
+            if (ScrabbleValues.letterScore(c) > 5) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private void initializeLetterFrequency() {
@@ -74,10 +107,16 @@ public class SamPlayerV0 extends Player {
     }
 
     private int calculateLetterValue(Letter letter) {
+        char c = letter.getCharacter();
         int scrabbleValue = letter.getValue();
-        int frequency = letterFrequency.getOrDefault(letter.getCharacter(), 0);
+        int frequency = letterFrequency.getOrDefault(c, 0);
+        int taken = lettersTaken.get(c);
 
-        return scrabbleValue * 2 + (13 - frequency);
+        // Adjust value based on how many letters have been taken
+        double availabilityFactor = (double) frequency / (frequency - taken);
+
+        // Combine Scrabble value, frequency, and availability
+        return (int) (scrabbleValue * 2 + (13 - frequency) * availabilityFactor);
     }
 
     private int calculateCombinationBonus(Letter letter) {
@@ -105,6 +144,22 @@ public class SamPlayerV0 extends Player {
         return bonus;
     }
 
+    private double getBalancedFrequency(char c) {
+        int index = c - 'A';
+        double usageFreq = usagefrequencies[index] / 100.0; // Convert to decimal
+        int scrabbleFreq = letterFrequency.get(c);
+
+        // balance of usage and instance frequencies
+        double usageWeight = 0.6;
+
+        return usageWeight * usageFreq + (1 - usageWeight) * (scrabbleFreq / 100.0);
+    }
+
+    private int calculateBidBudget(int playerScore, int remainingRounds) {
+        double roundFactor = (double) (totalRounds - currentRound) / totalRounds;
+        return (int) (playerScore * (0.1 + (0.2 * roundFactor)));
+    }
+
     private int calculateVowelBonus(Letter letter) {
         int consonantCount = 0;
         int vowelCount = 0;
@@ -119,15 +174,10 @@ public class SamPlayerV0 extends Player {
 
         // Check if the consonant-to-vowel ratio is greater than 2:1
         if (consonantCount > 2 * vowelCount && vowels.contains(letter.getCharacter())) {
-            return 5; // Adjust this value as needed
+            return 5;
         }
 
         return 0;
-    }
-
-    private int calculateBidBudget(int playerScore, int remainingRounds) {
-        double roundFactor = (double) (totalRounds - currentRound) / totalRounds;
-        return (int) (playerScore * (0.1 + (0.2 * roundFactor)));
     }
 
     @Override
@@ -172,5 +222,10 @@ public class SamPlayerV0 extends Player {
             }
         }
         return true;
+    }
+
+    public void updateLettersTaken(Letter letter) {
+        char c = letter.getCharacter();
+        lettersTaken.put(c, lettersTaken.get(c) + 1);
     }
 }
