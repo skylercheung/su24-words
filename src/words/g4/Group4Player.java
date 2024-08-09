@@ -12,6 +12,7 @@ public class Group4Player extends Player {
     private int bidThreshold = 91; // max score in scrabblewordlist.txt; METHOXYBENZENES or OXYPHENBUTAZONE
     private int bidTotal = 0;
     private int prevBid = 0;
+    private int round = 0; // track current round
 
     private final Map<Word, int[]> initializeAvailableWords = new HashMap<>();
     private int[] initializeRemainingCharacters = new int[26];
@@ -41,6 +42,7 @@ public class Group4Player extends Player {
 
         bidTotal = 0;
         prevBid = 0;
+        round = 0;
     }
 
     /**
@@ -103,6 +105,9 @@ public class Group4Player extends Player {
         for (int i = 0; i < numPlayers; i++) {
             playerLetters.add(new LinkedList<Character>()); // initialize each player's list of letters
         }
+
+        round = 0;
+        bidTotal = 0; 
     }
 
     private void filterImpossibleWords(Character currLetter) {
@@ -169,7 +174,7 @@ public class Group4Player extends Player {
                    SecretState secretstate, int playerID) {
 
         // adds previous bid if won
-        if (!playerBidList.isEmpty() && myID == playerBidList.get(totalRounds - 1).getWinnerID()) {
+        if (!playerBidList.isEmpty() && round != 0 && myID == playerBidList.get(round - 1).getWinnerID()) {
             bidTotal += prevBid;
         }
 
@@ -196,6 +201,7 @@ public class Group4Player extends Player {
 
         myBid = Math.min(myBid, bidThreshold - bidTotal);
         prevBid = myBid;
+        round += 1;
 
         System.err.println("what is my bid" + myBid);
 
