@@ -9,9 +9,10 @@ import java.util.logging.Level;
 
 public class Group4PlayerSkyler extends Player {
 
-    private double bidFraction = 0.1; // fraction of calculated EV to form bid
+    private double bidFraction = 0.5; // fraction of calculated EV to form bid
     private int bidThreshold = 91; // max score in scrabblewordlist.txt; METHOXYBENZENES or OXYPHENBUTAZONE
     private int bidTotal = 0;
+    private int prevBid = 0;
 
     /**
      * This method is called at the start of a new game.
@@ -45,6 +46,8 @@ public class Group4PlayerSkyler extends Player {
 //        System.err.println("yo" + maxScore + maxWord);
 
         this.numPlayers = numPlayers; // so we know how many players are in the game
+
+        bidTotal = 0;
     }
 
     /**
@@ -134,14 +137,26 @@ public class Group4PlayerSkyler extends Player {
                    int totalRounds, ArrayList<String> playerList,
                    SecretState secretstate, int playerID) {
 
+        // adds previous bid if won
+        if (!playerBidList.isEmpty() && myID == playerBidList.get(totalRounds - 1).getWinnerID()) {
+            bidTotal += prevBid;
+        }
+
         int myBid = (int)(Math.random() * secretstate.getScore()) / 8;
 
         double totalProb = 0.0;
         double expectedValue = 0.0;
 
+        List<Character> currentLetterPool = new ArrayList<>(myLetters);
+        currentLetterPool.add(bidLetter.getCharacter());
+
+        for (PlayerBids playerBids : playerBidList) {
+            currentLetterPool.add(playerBids.getTargetLetter().getCharacter());
+        }
+
         for (Word word : wordlist) {
             if (isValidScrabbleWord(word.word)) {
-                double wordProb = calculateWordProb(word);
+                double wordProb = calculateWordProb(word, currentLetterPool);
                 int wordScore = ScrabbleValues.getWordScore(word.word);
 
                 expectedValue += wordProb * wordScore;
@@ -156,15 +171,20 @@ public class Group4PlayerSkyler extends Player {
         myBid = (int) (expectedValue * bidFraction) + ScrabbleValues.letterScore(bidLetter.getCharacter()) / 2;
         myBid = Math.min(myBid, bidThreshold - bidTotal);
 
-        bidTotal += myBid;
+        myBid = Math.min(myBid, 12);
 
-        System.err.println(bidTotal);
+        prevBid = myBid;
 
         return myBid;
     }
 
-    private double calculateWordProb(Word word) {
+    private double calculateWordProb(Word word, List<Character> currentLetterPool) {
         double probability = 1.0;
+
+        Map<Character, Integer> letterCount = new HashMap<>();
+        for (char c : currentLetterPool) {
+            letterCount.put(c, letterCount.getOrDefault(c, 0) + 1);
+        }
 
         for (char c : word.word.toCharArray()) {
             probability *= ScrabbleValues.getLetterFrequency(c);
