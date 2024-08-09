@@ -107,7 +107,7 @@ public class Group4Player extends Player {
         }
 
         round = 0;
-        bidTotal = 0; 
+        bidTotal = 0;
     }
 
     private void filterImpossibleWords(Character currLetter) {
@@ -178,8 +178,6 @@ public class Group4Player extends Player {
             bidTotal += prevBid;
         }
 
-        System.err.println("hidfhajdf" + bidTotal + "    adfh lol " + bidThreshold);
-
         int myBid = (int)(Math.random() * secretstate.getScore()) / 8;
 
         double totalProb = 0.0;
@@ -203,9 +201,12 @@ public class Group4Player extends Player {
         prevBid = myBid;
         round += 1;
 
-        System.err.println("what is my bid" + myBid);
-
-        return myBid;
+        String word = returnWord();
+        if (word.length() >= 7 && playerList.size() > 3) {
+            return 0;
+        } else {
+            return myBid;
+        }
     }
 
     private double calculateWordProb(Word word) {
