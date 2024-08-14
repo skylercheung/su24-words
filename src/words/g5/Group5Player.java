@@ -9,9 +9,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class Group5Player extends words.core.Player {
-    private int maxVowelBid = 16;
+
+    private int vowelBid = 8;
+    private int maxVowelBid = 12;
     private int minVowelBid = 2;
-    private int vowelBid = 10;
 
     private boolean isVowel(char c) {
         return "AEIOUaeiou".indexOf(c) >= 0;
@@ -67,7 +68,7 @@ public class Group5Player extends words.core.Player {
         String currentBest = returnWord();
 
         //if we can already make a 7+ letter word, bid 1
-        if (currentBest.length() >= 7) {
+        if (currentBest.length() >= 7 || secretstate.getScore() <= 30 || secretstate.getTotalLetters() >= 20) {
             return Math.min(1, secretstate.getScore());
         }
 
@@ -94,7 +95,7 @@ public class Group5Player extends words.core.Player {
         //if we need this character to make the best word given our current letters
         if (possibleBest.contains(bidChar.toString()) && numChar < numCharInBest) {
             if (possibleBest.length() >= 7) {
-                bid = 25;
+                bid = 20;
             } else {
                 bid = ScrabbleValues.getWordScore(possibleBest) / 2 + 1;
             }
@@ -103,7 +104,7 @@ public class Group5Player extends words.core.Player {
             bid = vowelBid;
         }
         else {
-            bid = 8;
+            bid = 6;
         }
 
         return Math.min(bid, secretstate.getScore());

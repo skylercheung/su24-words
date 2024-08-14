@@ -43,6 +43,8 @@ public class Group4Player extends Player {
         bidTotal = 0;
         prevBid = 0;
         round = 0;
+
+        System.out.println("hi");
     }
 
     /**
@@ -183,13 +185,21 @@ public class Group4Player extends Player {
         double totalProb = 0.0;
         double expectedValue = 0.0;
 
+        int maxScore = 0;
+
         for (Word word : currAvailableWords.keySet()) { // Iterate over currAvailableWords, not wordlist
             double wordProb = calculateWordProb(word);
             int wordScore = ScrabbleValues.getWordScore(word.word);
 
             expectedValue += wordProb * wordScore;
             totalProb += wordProb;
+
+            if (wordScore > maxScore) {
+                maxScore = wordScore;
+            }
         }
+
+        bidThreshold = maxScore; // threshold set to max word score of avail words
 
         if (totalProb > 0) {
             expectedValue /= totalProb;

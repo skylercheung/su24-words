@@ -1,13 +1,9 @@
-words.g4.Group4Player
 words.g0.LetterValuePlayer
 words.g0.RandomPlayer
-words.g0.InteractivePlayer
-words.g4.Group4PlayerSkyler
-words.g4.Group4PlayerAaron
-words.g1.SamPlayerV0
+words.g1.DynamicCVCPlayer
 words.g2.vipPlayer
-words.g2.albertPlayer3
 words.g3.Group3Player
+words.g4.Group4Player
 words.g5.Group5Player
-words.g6.g6PlayerV2
-words.g7.Group7Player3
+words.g6.g6PlayerV4
+words.g7.Group7Player4

@@ -7,6 +7,8 @@ import java.io.FileReader;
 import java.util.*;
 import java.util.logging.Level;
 
+import static words.core.ScrabbleValues.getWordScore;
+
 
 public class Group3Player extends Player {
     Map<Integer, Map<Letter, Integer>> playerCounts;             //format: Map <PlayerID <letter_type, num_letters_of_type>
@@ -17,6 +19,8 @@ public class Group3Player extends Player {
     ArrayList<String> hardConst; // value of 5 or higher
     String[] sortWords;
 
+    int cashRemaining;
+
     public Group3Player() {
         playerCounts = new HashMap<>();
         absoluteCounts = new HashMap<>();
@@ -24,6 +28,8 @@ public class Group3Player extends Player {
         vowels = new ArrayList<>(Arrays.asList("A", "E", "I", "O", "U"));
         easyConst = new ArrayList<>(Arrays.asList("B", "C", "D", "F", "G", "H", "L", "M", "N", "P", "R", "S", "T", "V", "W", "Y"));
         hardConst = new ArrayList<>(Arrays.asList("J", "K", "Q", "X", "Z"));
+
+        cashRemaining = 100;
 
     }
 
@@ -91,6 +97,11 @@ public class Group3Player extends Player {
 
     }
 
+    private void updateCash(int pointsSpent) {
+
+        cashRemaining -= pointsSpent;
+    }
+
 
 
 
@@ -105,44 +116,71 @@ public class Group3Player extends Player {
         return true;
     }
 
-    public static List<Character> sorter( List<Character> letters){
-        List<Character> sortedList = new ArrayList<>(letters);
-        Collections.sort(sortedList);
-        return sortedList;
+    // if a word contains all MyLetters and bid letter... is it double counting bid letter (if its already in my letters)
+    public static boolean contributes(String w, List<Character> myLetters, String bidLetter){
+        if(!myLetters.contains(bidLetter.charAt(0))){
+            return true;
+        }
+        int char_count = 0;
+        for (char c : myLetters) {
+            if (c == bidLetter.charAt(0)) {
+                char_count++;
+            }
+        }
+        int w_count = 0;
+        for (int i = 0; i < w.length(); i++) {
+            if (w.charAt(i) == bidLetter.charAt(0)) {
+                w_count++;
+            }
+        }
+
+        return w_count > char_count;
+
+
     }
 
 
     @Override
     public int bid(Letter bidLetter, List<PlayerBids> playerBidList, int totalRounds, ArrayList<String> playerList, SecretState secretstate, int playerID) {
-        int lastIndex = playerBidList.size() - 1;
-        if (playerBidList.size() > 0) recordLetter(playerBidList.get(lastIndex).getTargetLetter(), playerBidList.get(lastIndex).getWinnerID());
+        if (playerBidList.size() > 0)
+            recordLetter(playerBidList.get(playerBidList.size() - 1).getTargetLetter(), playerBidList.get(playerBidList.size() - 1).getWinnerID());
 
-        if(totalPlayed < 3){
-            return 3;
-        }
-
-        // THIS checks if we have a valid word of 7 or more letters. at this point, stop betting.
-        // IMPROVEMENT made: if new letter adds to value of our existing word... than can bid
+        //calculate useful vars
         String word = returnWord();
-        if (word.length() >= 7){
+        int proposal = 0;
+        int roundsLeft = numPlayers * 8 - totalPlayed;
+
+        if (totalPlayed < 2) {
+            proposal = 3;
+
+
+            // THIS checks if we have a valid word of 7 or more letters. at this point, stop betting.
+            // IMPROVEMENT made: if new letter adds to value of our existing word... than can bid
+            // CHANGE:now goes into this position when it exceeds 100
+
+        }
+        else if (word.length() >= 7){
+            proposal = 2;
+        }
+        else if (cashRemaining + getWordScore(returnWord()) > 101) {
             int c_count = 0;
-            for(String w: sortWords){
-                if((w.length() == 7) && (containsAllLetters(w, myLetters))){
-                    if(w.contains(String.valueOf(bidLetter.getCharacter()))){
-                        c_count ++;
+            for (String w : sortWords) {
+                if ((w.length() == 7) && (containsAllLetters(w, myLetters))) {
+                    if (w.contains(String.valueOf(bidLetter.getCharacter()))) {
+                        if (contributes(w, myLetters, String.valueOf(bidLetter.getCharacter()))) {
+                            c_count++;
+                        }
+                    }
+                    if (c_count >= 1) {
+                        proposal = 5;
                     }
                 }
-                if (c_count >=1){
-                    return 5;
-                }
-
             }
-            return 0;
         }
 
 
         //need to consider rounds left
-        int roundsLeft = numPlayers * 8 - totalPlayed;
+
         // strategy: rounds left + number of letters > 11 to bid heavily to get a 7-letter word
         // aka in the >= 4 section
         //reasoning: we will assume some we will be outbid despite big bets, or some letters dont work
@@ -158,28 +196,34 @@ public class Group3Player extends Player {
         // POSSIBLE LIMITATION: can all but one of these letters work?
 
 
-        if((myLetters.size() >= 4) && (1.5*(7-myLetters.size())< roundsLeft)){ //&& (
+        else if((myLetters.size() >= 4) && (1.5*(7-myLetters.size())< roundsLeft)){ //&& (
             int w_count = 0;
             int c_count = 0;
             for(String w: sortWords){
                 if((w.length() >= 7) && (containsAllLetters(w, myLetters))){
                     w_count ++;
                     if(w.contains(String.valueOf(bidLetter.getCharacter()))){
-                        c_count ++;
+                        if(contributes(w, myLetters, String.valueOf(bidLetter.getCharacter()))){
+                            c_count ++;
+                        }
+
                     }
                 }
 
             }
             if ((double) c_count / w_count > 0.9){
-                return 10;
+                proposal = 10;
             }
-            if ((double) c_count / w_count > 0.7){
-                return 8;
+            else if ((double) c_count / w_count > 0.7){
+                proposal = 8;
             }
-            if ((double) c_count / w_count > 0.5){
-                return 5;
+            else if ((double) c_count / w_count > 0.5){
+                proposal = 5;
             }
-            return 1;
+            else {
+                proposal = 1;
+            }
+
 
         }
 
@@ -190,16 +234,17 @@ public class Group3Player extends Player {
         // we wnt vowels and easy constinents
         //if we cant get them, make the other teams pay for them!
 
-        if (vowels.contains(String.valueOf(bidLetter.getCharacter()))){
-            return 6;
+        else if (vowels.contains(String.valueOf(bidLetter.getCharacter()))){
+            proposal = 6;
         }
-        if (easyConst.contains(String.valueOf(bidLetter.getCharacter()))){
-            return 6;
+        else if (easyConst.contains(String.valueOf(bidLetter.getCharacter()))){
+            proposal = 6;
         }
-        if (hardConst.contains(String.valueOf(bidLetter.getCharacter()))){
-            return 4;
+        else if (hardConst.contains(String.valueOf(bidLetter.getCharacter()))){
+            proposal = 4;
         }
 
-        return 0;
+        updateCash(proposal);
+        return proposal;
     }
 }
